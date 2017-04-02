@@ -1,0 +1,7 @@
+* {
+	-webkit-app-region: drag;
+}
+
+body.hover {
+	opacity: 0.5;
+}
