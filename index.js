@@ -113,7 +113,7 @@ function createMainWindow() {
 }
 
 electron.app.on("ready", () => {
-	electron.app.setUserActivity('Vocabulary.com', {}, 'https://vocabulary.com')
+	if (process.platform == 'darwin') {electron.app.setUserActivity('Vocabulary.com', {}, 'https://vocabulary.com');}
 	electron.Menu.setApplicationMenu(Menu);
 
 	if (!global.mainWindow) {
