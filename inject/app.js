@@ -6,6 +6,8 @@ body_object = document.getElementsByTagName('BODY')[0]
 
 delete window.Notification;
 
+document.log = remote.getGlobal('log');
+
 function forceInteraction(element, type = "click", query = false) { // Force a click interaction with an element.
 	if (query) {
 		object = document.querySelector(element);
@@ -198,3 +200,24 @@ ipcRenderer.on('hoverOn', () => {
 ipcRenderer.on('hoverOff', () => {
 	document.getElementsByTagName('BODY')[0].className = document.getElementsByTagName('BODY')[0].className.replace(' hover', '');
 });
+
+// Override Alert Function
+function overrideSelectNativeJS_Functions () {
+    window.alert = function alert (message) {
+        console.log(message);
+		document.log(message);
+    }
+}
+
+function addJS_Node (text, s_URL, funcToRun) {
+    var scriptNode                          = document.createElement ('script');
+    scriptNode.type                         = "text/javascript";
+    if (text)       scriptNode.textContent  = text;
+    if (s_URL)      scriptNode.src          = s_URL;
+    if (funcToRun)  scriptNode.textContent  = '(' + funcToRun.toString() + ')()';
+
+    var targ = document.getElementsByTagName ('head')[0] || document.body || document.documentElement;
+    targ.appendChild(scriptNode);
+}
+
+setTimeout(function(){addJS_Node(null,null,overrideSelectNativeJS_Functions);}, 1500);

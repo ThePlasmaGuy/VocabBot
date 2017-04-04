@@ -1,4 +1,5 @@
 const electron   = require("electron");
+const dialog     = electron.dialog;
 const filesystem = require("fs");
 const path       = require("path");
 const Menu       = require("./modules/Menu");
@@ -6,6 +7,10 @@ const Storage    = require("./modules/Storage");
 
 require("electron-debug")();
 require("electron-dl")();
+
+global.log = function(logContent) {
+	console.log(logContent)
+}
 
 let isQuitting = false;
 
@@ -21,6 +26,11 @@ const isAlreadyRunning = electron.app.makeSingleInstance(() => {
 
 if (isAlreadyRunning)
 	electron.app.quit();
+
+// Disable error dialogs by overriding
+dialog.showErrorBox = function(title, content) {
+    global.log(`${title}\n${content}`);
+};
 
 function createMainWindow() {
 	const lastWindowState = Storage.get("lastWindowState") || {width: 900, height: 675};
@@ -90,18 +100,20 @@ function createMainWindow() {
 
 	if (Storage.get('hover') == true) {
 		global.hover = true;
-		console.log('[RENDER] Hover Mode Activated.')
+		global.log('[RENDER] Hover Mode Activated.')
 		browser.setVisibleOnAllWorkspaces(true);
 		browser.setAlwaysOnTop(true);
 		browser.setFullScreenable(false);
 		browser.setIgnoreMouseEvents(true);
-		browser.send('hoverOn');
+		browser.setHasShadow(false);
+		setTimeout(function(){browser.send('hoverOn')},1750);
 	}
 
 	return browser;
 }
 
 electron.app.on("ready", () => {
+	electron.app.setUserActivity('Vocabulary.com', {}, 'https://vocabulary.com')
 	electron.Menu.setApplicationMenu(Menu);
 
 	if (!global.mainWindow) {
@@ -111,21 +123,23 @@ electron.app.on("ready", () => {
 	electron.globalShortcut.register('CmdOrCtrl+Alt+Shift+H', () => {
 		if (global.hover) {
 			global.hover = false;
-			console.log('[RENDER] Hover Mode Deactivated.')
+			global.log('[RENDER] Hover Mode Deactivated.')
 			global.mainWindow.setVisibleOnAllWorkspaces(false);
 			global.mainWindow.setAlwaysOnTop(false);
 			global.mainWindow.setFullScreenable(true);
 			global.mainWindow.setIgnoreMouseEvents(false);
+			global.mainWindow.setHasShadow(true);
 			global.mainWindow.send('hoverOff');
 			Storage.set('hover', false);
 		} else {
 			global.hover = true;
 			if (!global.mainWindow.isFullScreen()) {
-				console.log('[RENDER] Hover Mode Activated.')
+				global.log('[RENDER] Hover Mode Activated.')
 				global.mainWindow.setVisibleOnAllWorkspaces(true);
 				global.mainWindow.setAlwaysOnTop(true);
 				global.mainWindow.setFullScreenable(false);
 				global.mainWindow.setIgnoreMouseEvents(true);
+				global.mainWindow.setHasShadow(false);
 				global.mainWindow.send('hoverOn');
 				Storage.set('hover', true);
 			} else {
@@ -155,3 +169,4 @@ setInterval(async function() {
 	await new Promise(resolve => setTimeout(resolve, 1000));
 	electron.app.quit();
 }, 900000);
+
